@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "N9NZymec8qpRn1bV8YCBNixkfVo9dit/CM1kI0aGCom+oT1Q/sn2XVe2chqfGD5hi0RltgzS5ABHW8zqsD33Og==",
+  "success": true,
+  "projectFilePath": "/Users/ethanpollack/Projects/monogame/zlib/zlibDesktopTest/zlibDesktopTest.csproj",
+  "expectedPackageFiles": [
+    "/Users/ethanpollack/.nuget/packages/monogame.content.builder.task/3.8.1.303/monogame.content.builder.task.3.8.1.303.nupkg.sha512",
+    "/Users/ethanpollack/.nuget/packages/monogame.framework.desktopgl/3.8.1.303/monogame.framework.desktopgl.3.8.1.303.nupkg.sha512",
+    "/Users/ethanpollack/.nuget/packages/microsoft.netcore.app.ref/6.0.26/microsoft.netcore.app.ref.6.0.26.nupkg.sha512",
+    "/Users/ethanpollack/.nuget/packages/microsoft.aspnetcore.app.ref/6.0.26/microsoft.aspnetcore.app.ref.6.0.26.nupkg.sha512",
+    "/Users/ethanpollack/.nuget/packages/microsoft.netcore.app.host.osx-arm64/6.0.26/microsoft.netcore.app.host.osx-arm64.6.0.26.nupkg.sha512"
+  ],
+  "logs": []
+}
