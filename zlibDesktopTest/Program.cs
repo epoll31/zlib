@@ -1,2 +1,2 @@
-﻿using var game = new zlibDesktopTest.TestGame();
+﻿using var game = new zlibDesktopTest.BouncingBallGame();
 game.Run();

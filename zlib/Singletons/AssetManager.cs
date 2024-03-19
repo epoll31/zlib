@@ -36,15 +36,15 @@ public static class AssetGenerator
     {
         Texture2D texture = new(graphicsDevice, width, height);
         Color[] data = new Color[width * height];
-        for (int y = 0; y < height; ++y)
+        for (int y = 0; y < height; y++)
         {
-            for (int x = 0; x < width; ++x)
+            for (int x = 0; x < width; x++)
             {
                 if (
-                    x < borderWidth
-                    || x >= width - borderWidth
-                    || y < borderWidth
-                    || y >= height - borderWidth
+                    x < borderWidth - 1
+                    || x >= width - borderWidth + 0
+                    || y < borderWidth - 1
+                    || y >= height - borderWidth + 0
                 )
                 {
                     data[y * width + x] = borderColor;
@@ -155,12 +155,13 @@ public sealed class AssetManager
             new NineSlice(
                 AssetGenerator.Rectangle(
                     WindowManager.Instance.GraphicsDevice,
-                    50,
-                    50,
-                    1,
+                    6,
+                    6,
+                    borderWidth: 2,
                     Color.White,
                     Color.Transparent
                 ),
+                2,
                 1
             )
         );

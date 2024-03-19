@@ -1,0 +1,10 @@
+#OS junk files
+[Tt]humbs.db
+*.DS_Store
+
+#bin and obj folders
+**/bin/
+**/obj/
+
+# #Visual Studio files
+# .vs

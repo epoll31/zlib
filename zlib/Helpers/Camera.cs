@@ -5,85 +5,68 @@ using Microsoft.Xna.Framework.Input;
 
 namespace zlib;
 
+public static class VectorExtensions
+{
+    public static Vector3 Extend(this Vector2 vector, float z)
+    {
+        return new(vector.X, vector.Y, z);
+    }
+}
+
 public class Camera
 {
-    public Matrix Transform { get; set; }
+    // public Matrix Transform { get; set; }
 
     private float minScale = 0.6f;
     private float maxScale = 3.5f;
 
     private float scale;
-
-    private readonly float startScale;
-    private readonly Vector2 startPosition;
-
-    public Camera(float x, float y, float scale = 1)
+    public Vector2 ScaleOrigin { get; set; }
+    public float Scale
     {
-        startPosition = new Vector2(x, y);
-        startScale = scale;
-        this.scale = startScale;
-        Transform = Matrix.CreateTranslation(x, y, 0) * Matrix.CreateScale(this.scale);
+        get => scale;
+        set
+        {
+            float newScale = Math.Clamp(value, minScale, maxScale);
+
+            ScaleMatrix *= Matrix.CreateScale(newScale / scale);
+            TranslationMatrix *= Matrix.CreateTranslation(
+                (ScaleOrigin.X - Position.X) * (1 - newScale / scale),
+                (ScaleOrigin.Y - Position.Y) * (1 - newScale / scale),
+                0
+            );
+
+            scale = newScale;
+        }
     }
 
-    public void MoveBy(Vector2 delta)
+    public Vector2 Position
     {
-        Transform *= Matrix.CreateTranslation(delta.X, delta.Y, 0);
+        get => new(Transform.Translation.X, Transform.Translation.Y);
+        set { TranslationMatrix = Matrix.CreateTranslation(value.Extend(0)); }
     }
 
-    // public void MoveWorldToCenter(Point point)
-    // {
-    //     // TODO: Remove reference to GameManager
-    //     Viewport screen = GameManager.Instance.GraphicsDevice.Viewport;
-    //     Vector2 delta = screen.Bounds.Center.ToVector2() - WorldToScreen(point);
-    //     MoveBy(delta);
-    // }
+    public Matrix ScaleMatrix { get; private set; }
+    public Matrix TranslationMatrix { get; private set; }
+    public Matrix Transform => ScaleMatrix * TranslationMatrix;
 
-    public void ZoomAt(float v, float x, float y)
+    public Camera(Vector2 position = new Vector2(), float scale = 1)
     {
-        float newScale = Math.Clamp(scale * v, minScale, maxScale);
+        this.scale = Math.Clamp(scale, minScale, maxScale);
 
-        Transform *=
-            Matrix.CreateTranslation(-x, -y, 0)
-            * Matrix.CreateScale(newScale / scale)
-            * Matrix.CreateTranslation(x, y, 0);
-
-        scale = newScale;
-        // Console.WriteLine($"scale: {scale}");
+        ScaleMatrix = Matrix.CreateScale(scale);
+        TranslationMatrix = Matrix.CreateTranslation(position.Extend(0));
     }
 
-    public void Reset()
+    public Vector2 ScreenToWorld(Vector2 screen)
     {
-        scale = startScale;
-        Transform =
-            Matrix.CreateTranslation(startPosition.X, startPosition.Y, 0)
-            * Matrix.CreateScale(scale);
+        return Vector2.Transform(screen, Matrix.Invert(Transform));
     }
 
-    public Point ScreenToWorld(Vector2 point)
+    public Vector2 WorldToScreen(Vector2 world)
     {
-        return Vector2.Transform(new Vector2(point.X, point.Y), Matrix.Invert(Transform)).ToPoint();
+        return Vector2.Transform(world, Transform);
     }
 
-    public Vector2 WorldToScreen(Point point)
-    {
-        return Vector2.Transform(new Vector2(point.X, point.Y), Transform);
-    }
-
-    public void Update(GameTime gameTime)
-    {
-        // TODO: Remove references to InputManager
-        // if (InputManager.Instance.IsActive)
-        // {
-        //     if (InputManager.Instance.Mouse.LeftButtonDown)
-        //     {
-        //         MoveBy(InputManager.Instance.Mouse.ScreenDelta);
-        //     }
-        //     ZoomAt(
-        //         1 + InputManager.Instance.Mouse.ScrollWheelDelta / 10000f,
-        //         InputManager.Instance.Mouse.ScreenPosition.X,
-        //         InputManager.Instance.Mouse.ScreenPosition.Y
-        //     );
-        // }
-        // ZoomAt(1 + (ms.ScrollWheelValue - lms.ScrollWheelValue) / 1000f, ms.X, ms.Y);
-    }
+    public void Update(GameTime gameTime) { }
 }

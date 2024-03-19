@@ -18,7 +18,9 @@ public class Ball : IClickable
 
     public bool Interactable => true;
 
-    private Vector2? deltaFromMouse;
+    private bool dragging = false;
+
+    public Rectangle Bounds { get; } = new(-00, -00, 400, 300);
 
     public Ball(int radius, Vector2 position, Vector2 velocity, Color color)
     {
@@ -34,63 +36,37 @@ public class Ball : IClickable
 
     public void OnClickStart()
     {
-        deltaFromMouse = Position - InputManager.Instance.Mouse.ScreenPosition;
-    }
-
-    public void OnClickEnd()
-    {
-        // deltaFromMouse = null;
-    }
-
-    public void OnClickCanceled()
-    {
-        // deltaFromMouse = null;
+        dragging = true;
     }
 
     public void Update(GameTime gameTime)
     {
-        if (deltaFromMouse.HasValue)
+        if (dragging)
         {
-            Position = InputManager.Instance.Mouse.ScreenPosition + deltaFromMouse.Value;
+            Position = WindowManager.Instance.MainCamera.ScreenToWorld(
+                InputManager.Instance.Mouse.ScreenPosition
+            );
             if (InputManager.Instance.Mouse.LeftButtonUp)
             {
-                deltaFromMouse = null;
+                dragging = false;
             }
         }
         else
         {
             Position += Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (
-                Position.X < Radius
-                || Position.X > WindowManager.Instance.GraphicsDevice.Viewport.Width - Radius
-            )
+            if (Position.X < Bounds.Left + Radius || Position.X > Bounds.Right - Radius)
             {
                 Velocity = new Vector2(-Velocity.X, Velocity.Y);
-                Position = new Vector2(
-                    Math.Clamp(
-                        Position.X,
-                        Radius,
-                        WindowManager.Instance.GraphicsDevice.Viewport.Width - Radius
-                    ),
-                    Position.Y
-                );
             }
-            if (
-                Position.Y < Radius
-                || Position.Y > WindowManager.Instance.GraphicsDevice.Viewport.Height - Radius
-            )
+            if (Position.Y < Bounds.Top + Radius || Position.Y > Bounds.Bottom - Radius)
             {
                 Velocity = new Vector2(Velocity.X, -Velocity.Y);
-                Position = new Vector2(
-                    Position.X,
-                    Math.Clamp(
-                        Position.Y,
-                        Radius,
-                        WindowManager.Instance.GraphicsDevice.Viewport.Height - Radius
-                    )
-                );
             }
         }
+        Position = new Vector2(
+            Math.Clamp(Position.X, Bounds.Left + Radius, Bounds.Right - Radius),
+            Math.Clamp(Position.Y, Bounds.Top + Radius, Bounds.Bottom - Radius)
+        );
     }
 
     public void Draw(SpriteBatch spriteBatch)
@@ -110,7 +86,8 @@ public class Ball : IClickable
 
     public bool ContainsScreenPoint(Vector2 position)
     {
-        return Vector2.Distance(Position, position) <= Radius;
+        return Vector2.Distance(Position, WindowManager.Instance.MainCamera.ScreenToWorld(position))
+            <= Radius;
     }
 
     public float LayerDepthAtScreenPoint(Vector2 position)
@@ -119,19 +96,21 @@ public class Ball : IClickable
     }
 }
 
-public class TestGame : Game
+public class BouncingBallGame : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
     private Random random;
     private Ball ball;
+    private bool panning;
 
-    public TestGame()
+    public BouncingBallGame()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+        Window.AllowUserResizing = true;
     }
 
     protected override void Initialize()
@@ -193,17 +172,24 @@ public class TestGame : Game
             args
         ) =>
         {
-            ball.Position = WindowManager.Instance.Center;
+            ball.Position = WindowManager.Instance.Bounds.Center.ToVector2();
             ball.Velocity = random.NextUnitVector() * 250;
         };
 
         random = new Random();
-        ball = new Ball(
-            50,
-            WindowManager.Instance.Center,
-            random.NextUnitVector() * 250,
-            Color.Pink
+        ball = new Ball(50, Vector2.Zero, random.NextUnitVector() * 250, Color.Pink);
+        WindowManager.Instance.MainCamera.Position += (
+            WindowManager.Instance.Bounds.Center.ToVector2() - ball.Bounds.Center.ToVector2()
         );
+
+        InputManager.Instance.OnClickStartMiss += (sender, args) =>
+        {
+            panning = true;
+        };
+        InputManager.Instance.OnClickEndMiss += (sender, args) =>
+        {
+            panning = false;
+        };
     }
 
     protected override void Update(GameTime gameTime)
@@ -216,6 +202,31 @@ public class TestGame : Game
 
         InputManager.Instance.Update(gameTime);
         UIManager.Instance.Update(gameTime);
+        WindowManager.Instance.Update(gameTime);
+        if (panning)
+        {
+            WindowManager.Instance.MainCamera.Position += (InputManager.Instance.Mouse.ScreenDelta);
+        }
+        if (InputManager.Instance.Mouse.RightButtonClicked)
+        {
+            WindowManager.Instance.MainCamera.Position = (
+                WindowManager.Instance.Bounds.Center.ToVector2()
+                - Vector2.Transform(
+                    ball.Bounds.Center.ToVector2(),
+                    WindowManager.Instance.MainCamera.ScaleMatrix
+                )
+            );
+        }
+        if (InputManager.Instance.Mouse.ScrollWheelDelta != 0)
+        {
+            WindowManager.Instance.MainCamera.ScaleOrigin = InputManager
+                .Instance
+                .Mouse
+                .ScreenPosition;
+            WindowManager.Instance.MainCamera.Scale *= (
+                1 + InputManager.Instance.Mouse.ScrollWheelDelta / 1000f
+            );
+        }
 
         ball.Update(gameTime);
 
@@ -226,23 +237,44 @@ public class TestGame : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(
+            transformMatrix: WindowManager.Instance.MainCamera.Transform,
+            samplerState: SamplerState.PointClamp
+        );
+
         ball.Draw(_spriteBatch);
+        AssetManager
+            .Instance.GetImage<NineSlice>("border")
+            .Draw(_spriteBatch, destination: ball.Bounds, Color.White, 0, 10);
         _spriteBatch.End();
 
         _spriteBatch.Begin();
+
+        Image circle = AssetManager.Instance.GetImage("circle");
+        _spriteBatch.Draw(
+            circle.Texture,
+            WindowManager.Instance.MainCamera.Position,
+            null,
+            Color.ForestGreen * 0.5f,
+            0,
+            circle.Texture.Bounds.Center.ToVector2(),
+            10f / circle.Texture.Width,
+            SpriteEffects.None,
+            0
+        );
+
         UIManager.Instance.Draw(_spriteBatch);
         AssetManager
             .Instance.GetFont("ojuju")
             .Draw(
                 _spriteBatch,
-                "Hello, World!",
+                "zlib!",
                 WindowManager.Instance.Bounds,
                 new FontProperties()
                 {
                     TextFit = TextFit.None,
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Top,
                 }
             );
         _spriteBatch.End();

@@ -14,12 +14,12 @@ namespace zlib
 
         private WindowManager() { }
 
-        public GraphicsDevice GraphicsDevice { get; private set; }
         public Game CurrentGame { get; private set; }
+        public GraphicsDevice GraphicsDevice => CurrentGame.GraphicsDevice;
+        public Camera MainCamera { get; private set; }
 
         public Rectangle Bounds => GraphicsDevice.Viewport.Bounds;
-        public Vector2 Center =>
-            new(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+
         public bool IsActive => CurrentGame.IsActive;
 
         public void Initialize(Game game)
@@ -30,7 +30,12 @@ namespace zlib
         public void SetCurrentGame(Game game)
         {
             CurrentGame = game;
-            GraphicsDevice = game.GraphicsDevice;
+            MainCamera = new Camera();
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            MainCamera.Update(gameTime);
         }
     }
 }
