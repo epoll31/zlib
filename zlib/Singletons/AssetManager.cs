@@ -41,10 +41,10 @@ public static class AssetGenerator
             for (int x = 0; x < width; x++)
             {
                 if (
-                    x < borderWidth - 1
-                    || x >= width - borderWidth + 0
-                    || y < borderWidth - 1
-                    || y >= height - borderWidth + 0
+                    x < borderWidth
+                    || x >= width - borderWidth - 1
+                    || y < borderWidth
+                    || y >= height - borderWidth - 1
                 )
                 {
                     data[y * width + x] = borderColor;
@@ -155,13 +155,13 @@ public sealed class AssetManager
             new NineSlice(
                 AssetGenerator.Rectangle(
                     WindowManager.Instance.GraphicsDevice,
-                    6,
-                    6,
-                    borderWidth: 2,
+                    5,
+                    5,
+                    borderWidth: 1,
                     Color.White,
                     Color.Transparent
                 ),
-                2,
+                1,
                 1
             )
         );

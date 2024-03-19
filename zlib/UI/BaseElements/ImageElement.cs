@@ -7,6 +7,12 @@ public class ImageElement : Element
 {
     public Image Image { get; set; }
 
+    public ImageElement(params Element[] children)
+        : base(children)
+    {
+        Image = AssetManager.Instance.GetImage("blank");
+    }
+
     public ImageElement(Image image, params Element[] children)
         : base(children)
     {

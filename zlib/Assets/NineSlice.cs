@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace zlib;
 
@@ -74,34 +75,37 @@ public class NineSlice : Image
 
     public static Dictionary<NineSliceSection, Rectangle> SplitRectangle(
         Rectangle bounds,
-        int edges
-    ) => SplitRectangle(bounds, edges, edges);
+        int edges,
+        int gap = 0
+    ) => SplitRectangle(bounds, edges, edges, gap);
 
     public static Dictionary<NineSliceSection, Rectangle> SplitRectangle(
         Rectangle bounds,
         int veticalEdges,
-        int horizontalEdges
-    ) => SplitRectangle(bounds, veticalEdges, veticalEdges, horizontalEdges, horizontalEdges);
+        int horizontalEdges,
+        int gap = 0
+    ) => SplitRectangle(bounds, veticalEdges, veticalEdges, horizontalEdges, horizontalEdges, gap);
 
     public static Dictionary<NineSliceSection, Rectangle> SplitRectangle(
         Rectangle bounds,
         int top,
         int bottom,
         int left,
-        int right
+        int right,
+        int gap = 0
     )
     {
         int x0 = bounds.Left;
         int w1 = left;
-        int x1 = bounds.Left + left;
-        int w2 = bounds.Right - left - right;
+        int x1 = bounds.Left + left + gap;
+        int w2 = bounds.Width - left - right - gap * 2;
         int x2 = bounds.Right - right;
         int w3 = right;
 
         int y0 = bounds.Top;
         int h1 = top;
-        int y1 = bounds.Top + top;
-        int h2 = bounds.Bottom - top - bottom;
+        int y1 = bounds.Top + top + gap;
+        int h2 = bounds.Height - top - bottom - gap * 2;
         int y2 = bounds.Bottom - bottom;
         int h3 = bottom;
 
@@ -118,23 +122,24 @@ public class NineSlice : Image
             { NineSliceSection.BottomRight, new Rectangle(x2, y2, w3, h3) }
         };
     }
-    
 
     public void Draw(
         SpriteBatch spriteBatch,
         Rectangle destination,
         Color color,
         float layerDepth,
-        int edges
-    ) => Draw(spriteBatch, destination, color, layerDepth, edges, edges);
+        int edges,
+        int gap = 0
+    ) => Draw(spriteBatch, destination, color, layerDepth, edges, edges, gap);
 
     public void Draw(
         SpriteBatch spriteBatch,
         Rectangle destination,
         Color color,
         float layerDepth,
+        int verticalEdges,
         int horizontalEdges,
-        int verticalEdges
+        int gap = 0
     ) =>
         Draw(
             spriteBatch,
@@ -144,7 +149,8 @@ public class NineSlice : Image
             verticalEdges,
             verticalEdges,
             horizontalEdges,
-            horizontalEdges
+            horizontalEdges,
+            gap
         );
 
     public void Draw(
@@ -155,7 +161,8 @@ public class NineSlice : Image
         int top,
         int bottom,
         int left,
-        int right
+        int right,
+        int gap = 0
     )
     {
         Dictionary<NineSliceSection, Rectangle> splitBounds = SplitRectangle(
@@ -163,7 +170,8 @@ public class NineSlice : Image
             top,
             bottom,
             left,
-            right
+            right,
+            gap
         );
         foreach (NineSliceSection section in SourceRectangles.Keys)
         {

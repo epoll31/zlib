@@ -35,18 +35,6 @@ public abstract class Element : IClickable
         set => _interactable = value;
     }
 
-    // private bool _enabled;
-    // public bool Enabled
-    // {
-    //     get => _enabled;
-    //     set
-    //     {
-    //         _enabled = value;
-    //         Interactable = value;
-    //         Visible = value;
-    //     }
-    // }
-
     private Transform _transform;
     public Transform Transform
     {

@@ -16,6 +16,9 @@ public class ButtonElement : ImageElement, IClickable
 
     public event EventHandler<ButtonClickedEventArgs> OnClickedEvent;
 
+    public ButtonElement(params Element[] children)
+        : base(children) { }
+
     public ButtonElement(Image image, params Element[] children)
         : base(image, children) { }
 

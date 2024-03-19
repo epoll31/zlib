@@ -11,7 +11,8 @@ with.
     <!--
     Modify this string to change the font that will be imported.
     -->
-    <FontName>./ojuju.ttf</FontName>
+    <!-- <FontName>./ojuju.ttf</FontName> -->
+    <FontName>Arial.ttf</FontName>
 
     <!--
     Size is a float value, measured in points. Modify this value to change

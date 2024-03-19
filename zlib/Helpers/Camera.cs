@@ -18,7 +18,39 @@ public class Camera
     // public Matrix Transform { get; set; }
 
     private float minScale = 0.6f;
+    public float MinScale
+    {
+        get => minScale;
+        set
+        {
+            if (value > maxScale)
+            {
+                throw new ArgumentException("MinScale cannot be greater than MaxScale");
+            }
+            if (Scale < value)
+            {
+                Scale = value;
+            }
+            minScale = value;
+        }
+    }
     private float maxScale = 3.5f;
+    public float MaxScale
+    {
+        get => maxScale;
+        set
+        {
+            if (value < minScale)
+            {
+                throw new ArgumentException("MaxScale cannot be less than MinScale");
+            }
+            if (Scale > value)
+            {
+                Scale = value;
+            }
+            maxScale = value;
+        }
+    }
 
     private float scale;
     public Vector2 ScaleOrigin { get; set; }

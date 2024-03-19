@@ -21,22 +21,30 @@ public class Ball : IClickable
     private bool dragging = false;
 
     public Rectangle Bounds { get; } = new(-00, -00, 400, 300);
+    private Random random;
 
-    public Ball(int radius, Vector2 position, Vector2 velocity, Color color)
+    public Ball()
     {
-        Radius = radius;
-        Position = position;
-        Velocity = velocity;
-        Color = color;
+        random = new Random();
 
         Image = AssetManager.Instance.GetImage("circle");
 
         (this as IClickable).RegisterClickable();
+
+        Reset();
     }
 
     public void OnClickStart()
     {
         dragging = true;
+    }
+
+    public void Reset()
+    {
+        Position = Bounds.Center.ToVector2();
+        Velocity = random.NextUnitVector() * 250;
+        Radius = random.Next(15, 75);
+        Color = new Color(random.Next(150, 255), random.Next(150, 255), random.Next(150, 255));
     }
 
     public void Update(GameTime gameTime)
@@ -73,12 +81,11 @@ public class Ball : IClickable
     {
         spriteBatch.Draw(
             Image.Texture,
-            Position,
+            new Rectangle((int)(Position.X), (int)(Position.Y), Radius * 2, Radius * 2),
             null,
             Color,
             0,
-            new Vector2(Radius),
-            Radius * 2f / Image.Texture.Width,
+            Image.Texture.Bounds.Center.ToVector2(),
             SpriteEffects.None,
             0
         );
@@ -101,7 +108,6 @@ public class BouncingBallGame : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    private Random random;
     private Ball ball;
     private bool panning;
 
@@ -139,10 +145,9 @@ public class BouncingBallGame : Game
 
         UIManager.Instance.Root.AddChild(
             new ButtonElement(
-                AssetManager.Instance.GetImage("blank"),
                 new LabelElement(AssetManager.Instance.GetFont("ojuju"), "Reset")
                 {
-                    Transform = Transform.From(2),
+                    Transform = Transform.From(10),
                     FontProperties = new FontProperties()
                     {
                         TextFit = TextFit.Fill,
@@ -167,17 +172,16 @@ public class BouncingBallGame : Game
                 },
             }
         );
+
         UIManager.Instance.Root.GetElementByID<ButtonElement>("reset_button").OnClickedEvent += (
             sender,
             args
         ) =>
         {
-            ball.Position = WindowManager.Instance.Bounds.Center.ToVector2();
-            ball.Velocity = random.NextUnitVector() * 250;
+            ball.Reset();
         };
 
-        random = new Random();
-        ball = new Ball(50, Vector2.Zero, random.NextUnitVector() * 250, Color.Pink);
+        ball = new Ball();
         WindowManager.Instance.MainCamera.Position += (
             WindowManager.Instance.Bounds.Center.ToVector2() - ball.Bounds.Center.ToVector2()
         );
@@ -248,7 +252,7 @@ public class BouncingBallGame : Game
             .Draw(_spriteBatch, destination: ball.Bounds, Color.White, 0, 10);
         _spriteBatch.End();
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
         Image circle = AssetManager.Instance.GetImage("circle");
         _spriteBatch.Draw(
@@ -277,6 +281,7 @@ public class BouncingBallGame : Game
                     VerticalAlignment = VerticalAlignment.Top,
                 }
             );
+
         _spriteBatch.End();
 
         base.Draw(gameTime);
